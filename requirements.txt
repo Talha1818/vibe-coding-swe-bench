@@ -1,0 +1,56 @@
+# SWE-bench Generation and Evaluation Pipeline Requirements
+# Core dependencies for the complete pipeline
+
+# AI/ML Framework
+inspect-ai>=0.4.0
+
+# Dataset and Data Processing
+datasets>=2.14.0
+huggingface-hub>=0.16.0
+
+# SWE-bench Evaluation
+swebench>=4.1.0
+
+# HTTP and API clients
+requests>=2.31.0
+openai>=1.0.0
+
+# Data processing and utilities
+numpy>=1.24.0
+pandas>=2.0.0
+pathlib2>=2.3.0
+
+# Development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Optional: For advanced evaluation features
+# docker>=6.0.0  # Required for real SWE-bench evaluation
+# docker-compose>=1.29.0  # For complex evaluation setups
+
+# Environment management
+python-dotenv>=1.0.0
+
+# JSON and configuration
+pyyaml>=6.0
+
+# Progress bars and CLI utilities
+tqdm>=4.65.0
+click>=8.0.0
+
+# File and path utilities
+pathlib>=1.0.1
+
+# Optional: For enhanced logging and monitoring
+# wandb>=0.15.0  # Weights & Biases for experiment tracking
+# tensorboard>=2.13.0  # TensorBoard for monitoring
+
+# System utilities
+psutil>=5.9.0  # For system monitoring during evaluation
+
+# Text processing and validation
+regex>=2023.6.3  # For advanced text pattern matching
+
+# Optional: For cloud deployment
+# boto3>=1.26.0  # AWS integration
+# google-cloud-storage>=2.10.0  # GCP integration

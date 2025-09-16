@@ -1,0 +1,21 @@
+# Core requirements for SWE-bench pipeline (minimal setup)
+# Use this for basic functionality without optional features
+
+# Essential AI/ML dependencies
+inspect-ai>=0.4.0
+datasets>=2.14.0
+huggingface-hub>=0.16.0
+
+# SWE-bench evaluation
+swebench>=4.1.0
+
+# API and HTTP
+requests>=2.31.0
+openai>=1.0.0
+
+# Basic utilities
+numpy>=1.24.0
+pandas>=2.0.0
+pyyaml>=6.0
+tqdm>=4.65.0
+python-dotenv>=1.0.0
