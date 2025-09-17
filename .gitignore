@@ -7,6 +7,10 @@ __pycache__/
 **/*.json
 **/**/*.json
 
+# SWE-bench evaluation results and logs
+pipeline/swebench_gen/results/**/*.jsonl
+pipeline/swebench_gen/logs/
+
 
 # C extensions
 *.so
