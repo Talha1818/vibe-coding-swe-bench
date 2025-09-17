@@ -83,13 +83,16 @@ def swebench_patch_scorer() -> Scorer:
     
     return score
 
-def load_swebench_samples(split: str = "test") -> List[Sample]:
+def load_swebench_samples(split: str = "test", limit: int = None) -> List[Sample]:
     """Load SWE-bench data and create complete prompts."""
     try:
         ds = load_dataset("princeton-nlp/SWE-bench", split=split)
         samples = []
         
-        for ex in ds:
+        for i, ex in enumerate(ds):
+            if limit is not None and i >= limit:
+                break
+                
             # Create the complete prompt
             full_prompt = create_full_prompt(ex)
             
@@ -123,11 +126,12 @@ def load_swebench_samples(split: str = "test") -> List[Sample]:
         return [sample]
 
 @task
-def swebench_generate(models: List[str] = None) -> Task:
-    """SWE-bench generation task with prompt injection support and multiple models."""
+def swebench_generate(limit_n: int = None) -> Task:
+    """SWE-bench generation task with prompt injection support."""
     
-    # Load data
-    data = load_swebench_samples(os.environ.get("SWE_SPLIT", "test"))
+    # Load data with limit if provided
+    limit = limit_n if limit_n is not None else int(os.environ.get("SWE_LIMIT", "10"))
+    data = load_swebench_samples(os.environ.get("SWE_SPLIT", "test"), limit)
     
     # Use simple generate without template since input is already complete
     solver = generate()
