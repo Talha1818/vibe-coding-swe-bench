@@ -39,25 +39,21 @@ Constraints:
     
     return f"System: {SYSTEM}\n\nUser: {user_part}"
 
-class SwebenchPatchScorer(Scorer):
+@scorer
+def swebench_patch_scorer() -> Scorer:
     """Scorer that saves patches to JSONL format compatible with SWE-bench eval."""
     
-    id = "swebench/patch_scorer"
-    
-    def __init__(self):
-        super().__init__()
-    
-    def score(self, target, *, sample, output: str, **kwargs) -> Score:
+    async def score(state, target) -> Score:
         # Get output path from environment
         output_path = os.environ.get("PRED_PATH", "results/predictions.jsonl")
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Extract the original SWE-bench data from sample metadata
-        swebench_data = sample.metadata.get("swebench_data", {})
+        swebench_data = state.sample.metadata.get("swebench_data", {})
         
         # Clean up the output to extract just the diff content
-        patch_content = (output or "").strip()
+        patch_content = (state.output.content or "").strip()
         
         # Remove code block markers if present
         if patch_content.startswith("```diff"):
@@ -73,7 +69,7 @@ class SwebenchPatchScorer(Scorer):
         
         rec = {
             "instance_id": swebench_data.get("instance_id", "unknown"),
-            "model_name_or_path": kwargs.get("model_name", "openrouter"),
+            "model_name_or_path": getattr(state, "model_name", "openrouter"),
             "model_patch": patch_content,
         }
         
@@ -84,6 +80,8 @@ class SwebenchPatchScorer(Scorer):
             f.write(json.dumps(rec) + "\n")
         
         return Score(value=0.0, answer="saved")
+    
+    return score
 
 def load_swebench_samples(split: str = "test") -> List[Sample]:
     """Load SWE-bench data and create complete prompts."""
@@ -125,8 +123,8 @@ def load_swebench_samples(split: str = "test") -> List[Sample]:
         return [sample]
 
 @task
-def swebench_generate() -> Task:
-    """SWE-bench generation task with prompt injection support."""
+def swebench_generate(models: List[str] = None) -> Task:
+    """SWE-bench generation task with prompt injection support and multiple models."""
     
     # Load data
     data = load_swebench_samples(os.environ.get("SWE_SPLIT", "test"))

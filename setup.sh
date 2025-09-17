@@ -14,18 +14,18 @@ if ! command -v conda &> /dev/null; then
     exit 1
 fi
 
-# Create conda environment if it doesn't exist
-if ! conda env list | grep -q "vibe code"; then
-    echo "Creating conda environment 'vibe code'..."
-    conda create -n "vibe code" python=3.11 -y
+# Create conda environment if it doesn't exist (in /root)
+if ! conda env list | grep -q "/root/vibe-code"; then
+    echo "Creating conda environment 'vibe-code' in /root..."
+    conda create -p /root/vibe-code python=3.11 -y
 else
-    echo "Conda environment 'vibe code' already exists"
+    echo "Conda environment '/root/vibe-code' already exists"
 fi
 
 # Activate the environment
-echo "Activating conda environment 'vibe code'..."
+echo "Activating conda environment '/root/vibe-code'..."
 eval "$(conda shell.bash hook)"
-conda activate "vibe code"
+conda activate /root/vibe-code
 
 # Install inspect-ai and related dependencies
 echo "Installing inspect-ai and dependencies..."
@@ -42,7 +42,7 @@ echo ""
 echo "Setup complete! 🎉"
 echo ""
 echo "To activate the environment manually, run:"
-echo "conda activate 'vibe code'"
+echo "conda activate /root/vibe-code"
 echo ""
 echo "To run the SWE-bench generation pipeline:"
 echo "python run.py --model <model_name> --split <split_name>"
