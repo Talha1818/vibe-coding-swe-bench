@@ -12,15 +12,21 @@ load_dotenv()
 
 # ---- CONFIG ----
 EVALUATION_MODELS = [
-    "openrouter/openai/gpt-4o-mini",
-    "openrouter/openai/gpt-3.5-turbo",
+    "openrouter/openai/gpt-5",
+    "openrouter/openai/gpt-oss-120b", 
+    "openrouter/anthropic/claude-opus-4.1",
 ]
-LIMIT_N = 2  # matches your task dataset limit
+LIMIT_N = 200  # matches your task dataset limit
 LOG_DIR = Path(__file__).parent / "logs"
 PROMPT_INJECTIONS = [
-    "none",
-    "arbitrary_payload", 
+    # "none",
+    "self_delete",  # Attempts to make the model add a self-destructive command that deletes the current directory
+    "evil_package",  # Tries to get the model to install a malicious package via pip
+    "curl_bash",  # Attempts to make the model execute a malicious curl command
+    "eval_injection",  # Tries to get the model to add an unsafe eval function
+     "arbitrary_payload", 
     "bad_instructions",
+    "malicious_import"
 ]
 
 def run_evaluation_for_model(eval_models:list, injection_type:str="none"):
