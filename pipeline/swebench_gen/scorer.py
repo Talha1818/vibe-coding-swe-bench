@@ -51,58 +51,146 @@ def swebench_patch_scorer() -> Scorer:
     
     return score
 
+# def save_results_to_jsonl(results, eval_models, injection_type="none"):
+#     """Save evaluation results to JSONL files in the results directory."""
+#     results_dir = Path(__file__).parent / "results"
+#     results_dir.mkdir(exist_ok=True)
+    
+#     # Process results for each model
+#     if hasattr(results, 'samples') and results.samples:
+#         # Single result object (if only one model)
+#         model_results = [results]
+#     else:
+#         # Multiple result objects (one per model)
+#         model_results = list(results) if hasattr(results, '__iter__') else [results]
+    
+#     for i, result in enumerate(model_results):
+#         if i < len(eval_models):
+#             model_name = eval_models[i].split('/')[-1]
+#             model_dir = results_dir / model_name
+#             model_dir.mkdir(exist_ok=True)
+            
+#             # Create filename with injection type and timestamp
+#             from datetime import datetime
+#             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#             filename = f"{injection_type}_{timestamp}.jsonl"
+#             output_file = model_dir / filename
+            
+#             # Save patches for this model
+#             with open(output_file, 'w') as f:
+#                 for sample in result.samples:
+#                     if hasattr(sample, 'output') and sample.output:
+#                         patch_content = getattr(sample.output, 'completion', '') or getattr(sample.output, 'content', '') or ""
+                        
+#                         # Clean up the output to extract just the diff content
+#                         if patch_content.startswith("```diff"):
+#                             start = patch_content.find("```diff") + 7
+#                             end = patch_content.find("```", start)
+#                             if end > start:
+#                                 patch_content = patch_content[start:end].strip()
+#                         elif patch_content.startswith("```"):
+#                             start = patch_content.find("```") + 3
+#                             end = patch_content.find("```", start)
+#                             if end > start:
+#                                 patch_content = patch_content[start:end].strip()
+                        
+#                         # Get metadata from sample
+#                         swebench_data = sample.metadata.get("swebench_data", {})
+                        
+#                         rec = {
+#                             "instance_id": swebench_data.get("instance_id", sample.id),
+#                             "model_name_or_path": model_name,
+#                             "model_patch": patch_content,
+#                         }
+                        
+#                         f.write(json.dumps(rec) + '\n')
+            
+#             print(f"💾 Saved results for {model_name} to {output_file}")
+
+
+from pathlib import Path
+from datetime import datetime
+import json
+import os
+
+
 def save_results_to_jsonl(results, eval_models, injection_type="none"):
-    """Save evaluation results to JSONL files in the results directory."""
+    """
+    Save evaluation results to JSONL files in SWE-bench valid format.
+
+    Each JSON line contains:
+        {
+            "instance_id": str,
+            "model_name_or_path": str,
+            "model_patch": "diff --git ..."
+        }
+    """
+
     results_dir = Path(__file__).parent / "results"
     results_dir.mkdir(exist_ok=True)
-    
-    # Process results for each model
-    if hasattr(results, 'samples') and results.samples:
-        # Single result object (if only one model)
+
+    # Normalize results list
+    if hasattr(results, "samples") and results.samples:
         model_results = [results]
     else:
-        # Multiple result objects (one per model)
-        model_results = list(results) if hasattr(results, '__iter__') else [results]
-    
+        model_results = list(results) if hasattr(results, "__iter__") else [results]
+
     for i, result in enumerate(model_results):
-        if i < len(eval_models):
-            model_name = eval_models[i].split('/')[-1]
-            model_dir = results_dir / model_name
-            model_dir.mkdir(exist_ok=True)
-            
-            # Create filename with injection type and timestamp
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{injection_type}_{timestamp}.jsonl"
-            output_file = model_dir / filename
-            
-            # Save patches for this model
-            with open(output_file, 'w') as f:
-                for sample in result.samples:
-                    if hasattr(sample, 'output') and sample.output:
-                        patch_content = getattr(sample.output, 'completion', '') or getattr(sample.output, 'content', '') or ""
-                        
-                        # Clean up the output to extract just the diff content
-                        if patch_content.startswith("```diff"):
-                            start = patch_content.find("```diff") + 7
-                            end = patch_content.find("```", start)
-                            if end > start:
-                                patch_content = patch_content[start:end].strip()
-                        elif patch_content.startswith("```"):
-                            start = patch_content.find("```") + 3
-                            end = patch_content.find("```", start)
-                            if end > start:
-                                patch_content = patch_content[start:end].strip()
-                        
-                        # Get metadata from sample
-                        swebench_data = sample.metadata.get("swebench_data", {})
-                        
-                        rec = {
-                            "instance_id": swebench_data.get("instance_id", sample.id),
-                            "model_name_or_path": model_name,
-                            "model_patch": patch_content,
-                        }
-                        
-                        f.write(json.dumps(rec) + '\n')
-            
-            print(f"💾 Saved results for {model_name} to {output_file}")
+        if i >= len(eval_models):
+            continue
+
+        model_name = eval_models[i].split("/")[-1]
+        model_dir = results_dir / model_name
+        model_dir.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{injection_type}_{timestamp}.jsonl"
+        output_file = model_dir / filename
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            for sample in result.samples:
+                if not (hasattr(sample, "output") and sample.output):
+                    continue
+
+                # Extract raw patch content
+                patch_content = (
+                    getattr(sample.output, "completion", "")
+                    or getattr(sample.output, "content", "")
+                    or ""
+                ).strip()
+
+                # Clean wrapping code fences
+                if patch_content.startswith("```diff"):
+                    patch_content = patch_content[len("```diff"):].strip("`\n ")
+                elif patch_content.startswith("```"):
+                    patch_content = patch_content.strip("`\n ")
+
+                # Ensure starts with diff --git
+                lines = patch_content.splitlines()
+                if lines and not lines[0].startswith("diff --git"):
+                    for line in lines:
+                        if line.startswith("--- a/"):
+                            file_a = line[4:].strip()
+                            file_b = file_a.replace("a/", "b/")
+                            lines.insert(0, f"diff --git a/{file_a} b/{file_b}")
+                            break
+                    patch_content = "\n".join(lines)
+
+                # Remove "*** End of Patch ***"
+                patch_content = "\n".join(
+                    l for l in patch_content.splitlines() if "End of Patch" not in l
+                )
+
+                # Build record
+                swebench_data = getattr(sample, "metadata", {}).get("swebench_data", {})
+                record = {
+                    "instance_id": swebench_data.get(
+                        "instance_id", getattr(sample, "id", "unknown")
+                    ),
+                    "model_name_or_path": model_name,
+                    "model_patch": patch_content,
+                }
+
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        print(f"💾 Saved results for {model_name} to {output_file}")
