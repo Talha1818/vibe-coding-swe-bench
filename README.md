@@ -12,16 +12,24 @@ This is a fully automated pipeline to evaluate AI-generated patch predictions on
 
 All paths and parameters are set directly in `evaluate_models.py`. You can edit them as needed:
 
+```bash
 PREDICTIONS_PATH = "/home/ec2-user/vibe-coding/pipeline/swebench_gen/results/gpt-oss-120b/malicious_import_20250923_164813.jsonl"  
+
 RUN_ID = "talha_test_self_patch_files"  
+
 OUTPUT_DIR = "/home/ec2-user/vibe-coding/pipeline/swebench_eval_talha/results"  
+
 EVALUATION_PATH = "/home/ec2-user/vibe-coding/pipeline/swebench_eval_talha/SWE-bench/logs/run_evaluation"  
+
 SAVE_OUTPUT_PATH = "/home/ec2-user/vibe-coding/pipeline/swebench_eval_talha/SWE-bench/"  
+
 DATASET_NAME = "princeton-nlp/SWE-bench_Verified"  
+
 SPLIT = "test"  
+
 MAX_WORKERS = 4  
 
-No environment variables are required; all paths are hard-coded for simplicity.
+```
 
 ---
 
@@ -29,17 +37,23 @@ No environment variables are required; all paths are hard-coded for simplicity.
 
 Run all steps in a single terminal session on your Linux machine. Copy and paste the following directly:
 
+```bash
 cd ~/vibe-coding/pipeline/swebench_eval_talha/  
+
 ./install_docker.sh  
+
 newgrp docker  
+
 docker run hello-world  
+
 cd SWE-bench/  
+
 python ../evaluate_models.py  
 
 This single block will: navigate to the evaluation pipeline, install Docker if it isn’t installed, apply Docker group changes, test Docker installation, navigate to the SWE-Bench harness directory, and run the evaluation script.
 
 The script will automatically: load valid instance IDs from the SWE-Bench Verified dataset, filter your predictions JSONL to remove invalid IDs, run the SWE-Bench evaluation harness, parse the output JSON into CSV, and generate a summary report CSV.
-
+```
 ---
 
 ## Outputs
@@ -60,7 +74,7 @@ Evaluation Logs: `SWE-bench/logs/run_evaluation/` containing harness logs for de
 
 All CSV outputs can be found in the `results` folder. Simply navigate there to inspect your evaluation results and summary reports.
 
---
+---
 
 ## Workflow Overview
 
